@@ -1,5 +1,5 @@
 #N canvas 6 40 1000 700 8;
-#X text 20 10 MIDI sample player -- cluster 2 (01_C3 / 05_G3 / 10_Eb4);
+#X text 20 10 MIDI sample player -- cluster 2 (02_D3 / 05_G3 / 10_Eb4);
 #X obj 20 640 loadbang;
 #X msg 20 670 \; pd dsp 1;
 #X obj 20 100 poly 4 1;
@@ -21,7 +21,7 @@
 #X msg 510 160 12500;
 #X text 700 20 Sample arrays (loaded from disk on open);
 #N canvas 0 0 120 130 (subpatch) 0;
-#X array 01_C3 1 float 0;
+#X array 02_D3 1 float 0;
 #X coords 0 1 1 -1 80 50 1;
 #X restore 700 60 graph;
 #N canvas 0 0 120 130 (subpatch) 0;
@@ -33,7 +33,7 @@
 #X coords 0 1 1 -1 80 50 1;
 #X restore 1000 60 graph;
 #X obj 700 360 loadbang;
-#X msg 700 400 read -resize samples/01_C3.wav 01_C3;
+#X msg 700 400 read -resize samples/02_D3.wav 02_D3;
 #X msg 840 400 read -resize samples/05_G3.wav 05_G3;
 #X msg 980 400 read -resize samples/10_Eb4.wav 10_Eb4;
 #X obj 700 500 soundfiler;

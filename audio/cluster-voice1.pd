@@ -13,10 +13,10 @@
 #X obj 500 230 value adsr-attack;
 #X obj 600 270 del 0;
 #X obj 500 310 pack f f;
-#X obj 20 350 select 63 67 74;
-#X msg 20 400 set 04_F3;
+#X obj 20 350 select 74 67 63;
+#X msg 20 400 set 15_C5;
 #X msg 80 400 set 08_C4;
-#X msg 140 400 set 15_C5;
+#X msg 140 400 set 04_F3;
 #X obj 20 460 tabplay~;
 #X obj 500 500 line~;
 #X obj 700 350 t b b b;

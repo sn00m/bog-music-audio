@@ -17,11 +17,11 @@ only difference is how many samples each covers.
 | Files | Samples covered | Note numbers (internal) | Voices |
 |---|---|---|---|
 | `sampler.pd` + `sampler-voice.pd` | all 15 samples | 60–74 | 8 |
-| `cluster1.pd` + `cluster-voice1.pd` | 04_F3, 08_C4, 15_C5 | 63, 67, 74 | 4 |
-| `cluster2.pd` + `cluster-voice2.pd` | 01_C3, 05_G3, 10_Eb4 | 60, 64, 69 | 4 |
-| `cluster3.pd` + `cluster-voice3.pd` | 02_D3, 06_Ab3, 11_F4 | 61, 65, 70 | 4 |
-| `cluster4.pd` + `cluster-voice4.pd` | 03_Eb3, 07_Bb3, 12_G4 | 62, 66, 71 | 4 |
-| `cluster5.pd` + `cluster-voice5.pd` | 09_D4, 13_Ab4, 14_Bb4 | 68, 72, 73 | 4 |
+| `cluster1.pd` + `cluster-voice1.pd` | 15_C5, 08_C4, 04_F3 | 74, 67, 63 | 4 |
+| `cluster2.pd` + `cluster-voice2.pd` | 02_D3, 05_G3, 10_Eb4 | 61, 64, 69 | 4 |
+| `cluster3.pd` + `cluster-voice3.pd` | 06_Ab3, 03_Eb3, 11_F4 | 65, 62, 70 | 4 |
+| `cluster4.pd` + `cluster-voice4.pd` | 12_G4, 13_Ab4, 07_Bb3 | 71, 72, 66 | 4 |
+| `cluster5.pd` + `cluster-voice5.pd` | 09_D4, 14_Bb4, 01_C3 | 68, 73, 60 | 4 |
 
 Note numbers per cluster are no longer contiguous — each sample's internal
 note is fixed globally (`note = sample index + 59`, see "OSC input" below),
