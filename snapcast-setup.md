@@ -3,6 +3,26 @@
 How to make the Pure Data patches in this repo and a `snapclient` synced
 stream play **at the same time** on a Raspberry Pi, out of the same speakers.
 
+## The audio path
+
+```
+Mac mini:  soundscape.pd ──► snapserver ──┐
+                                          │  (Snapcast, over the network)
+Each Pi:   clusterN.pd ──┐                │
+                         ├─► PipeWire ──► speakers
+           snapclient ◄──────────────────┘
+```
+
+The soundscape (ambient bed + idle mode) is streamed from the Mac mini to
+every Pi. Each Pi plays that stream *and* its own local sampler at the same
+time, out of one sound card.
+
+**This document is about that last step on the Pis** — `clusterN.pd` and
+`snapclient` both wanting the Pi's output device. It's a Linux/ALSA problem.
+
+The Mac mini side (getting `soundscape.pd` into `snapserver`) is separate —
+see [`snapserver-setup.md`](snapserver-setup.md).
+
 ## The problem
 
 On a fresh Raspberry Pi OS install the Pd patches and Snapcast will not play

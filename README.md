@@ -40,6 +40,10 @@ behavior, choke gate, declick fade, note-off handling, and OSC input — just
 parameterized by which 3 samples/notes it owns, and which OSC port it
 listens on.
 
+Separate from the sampler patches, `soundscape.pd` runs the ambient bed and
+idle-mode soundscape on its own device — the Pure Data port of the old
+TouchDesigner project. See "Soundscape layer" below.
+
 ## Signal flow (main patch)
 
 ```
@@ -240,6 +244,99 @@ accept or drop it): `route fb1` → `t b` → **[`1` → `oscformat /activity`] 
   vanilla Pd object names for this — and both need the `-b` (binary) flag
   to carry real OSC bytes; without it, Pd's own FUDI text encoding gets
   sent instead and `oscparse` on the receiving end will reject it.
+
+## Soundscape layer (`audio/soundscape.pd`)
+
+`soundscape.pd` is a straight port of the two TouchDesigner sub-patches
+described above into vanilla Pd, so the install no longer needs TD running
+at all. It plays two things:
+
+- **Ambient bed** — `soundscapes/bog_ambient_base.wav` (stereo, 48 kHz,
+  24-bit, ~30 min), looping forever at a fixed level from patch open.
+- **Idle mode** — `soundscapes/bog_idle_mode.wav` (stereo, 48 kHz, 24-bit,
+  10 min), which fades in *on top of* the still-playing bed when no
+  `/activity` has arrived for the timeout, and fades out fast when activity
+  resumes. The bed is never interrupted.
+
+It runs on the **Mac mini**, which is the **source** for a Snapcast stream.
+`soundscape.pd`'s output feeds `snapserver` on the Mac mini; each Raspberry
+Pi runs a `snapclient` that receives that stream and — locally, in PipeWire
+— mixes it with the output of the `clusterN.pd` sampler running on that same
+Pi. So the soundscape reaches the speakers *through* Snapcast, synced across
+all the Pis; there is no shared hardware mixer. The Pi-side mixing (cluster
+patch + `snapclient` sharing one output) is covered in
+[`snapcast-setup.md`](snapcast-setup.md).
+
+`soundscape.pd` uses an ordinary `dac~ 1 2` — on the Mac mini that output is
+pointed at a **BlackHole virtual device**, which `sox` captures into
+`snapserver`'s pipe, not at physical speakers. Full Mac-side setup is in
+[`snapserver-setup.md`](snapserver-setup.md).
+
+### Where it takes over from TD
+
+The "What the TD side needs to implement" list above is now implemented in
+this patch:
+
+- `netreceive -u -b 9000` → `oscparse` → `list trim` → `route activity`
+  is the same OSC-in chain the cluster patches use, listening on the same
+  UDP port 9000 the cluster patches already send `/activity` to. Both the
+  `1` and the `0` of each ping pair count as activity (they're reduced to
+  bangs), so the existing dummy on/off pulse needs no change.
+- **You must edit the `connect 192.168.1.100 9000` message box in all 6
+  cluster patches** to the Mac mini's IP (it was a placeholder for TD's
+  address). Same edit that section already describes — the destination is
+  now the Mac mini instead of the TD machine.
+
+### Idle state machine
+
+- A retriggerable `del 60000` (the *idle timeout* floatatom, default 60000
+  ms) is the countdown. Every `/activity` bang restarts it; `loadbang` arms
+  it once at patch open so idle mode still starts on a cold boot with no
+  activity.
+- When `del` elapses it fires a `t b b b b`: `open` the idle file, send `1`
+  to start `readsf~`, set `[s idle-active]` to 1, and ramp the idle
+  envelope `line~` to 1 over the *fade-in* time (default 4000 ms).
+- `idle-active` gates a `spigot` on the activity bang. While idle, the next
+  `/activity` passes the spigot and fires a `t b b b`: clear
+  `idle-active`, ramp the envelope to 0 over the *fade-out* time (default
+  400 ms), and — after `fade-out + 200` ms via `del` — send `0` to stop the
+  idle `readsf~`. The same activity bang also restarts the 60 s countdown,
+  so idle mode can re-arm if things go quiet again.
+- A second `spigot` (also gated by `idle-active`) catches the idle
+  `readsf~`'s end-of-file bang and reopens/restarts it, so idle mode loops
+  for as long as the install stays idle rather than stopping after one
+  10-minute pass. The envelope is left untouched during this reloop.
+
+### Why `readsf~`, not arrays
+
+These two files are ~530 MB and ~170 MB on disk. Loaded into a Pd `array`
+they'd be 32-bit float in RAM — roughly 1 GB and 350 MB — and patch open
+would stall while `soundfiler` decoded them. The Mac mini has the RAM to
+spare, but there's no reason to: `readsf~` streams them from disk in a
+background thread, so the patch opens instantly. It handles 24-bit WAV
+directly; `readsf~ 2` gives the two audio outlets plus a bang outlet that
+fires at end-of-file, which is what both the ambient and idle reloops hang
+off.
+
+The ambient reloop (`readsf~` EOF → `t b b` → reopen + restart) has a small
+gap while the first disk buffer refills — inaudible-to-tiny once every ~30
+minutes. If a truly seamless bed matters, author `bog_ambient_base.wav`
+with crossfaded ends, or run two `readsf~` ping-ponging with a short
+`line~` crossfade.
+
+### Controls
+
+Three floatatoms at the top, same floatatom + `loadbang` + default-message
+pattern as the sampler patches:
+
+| Control | Default | Meaning |
+|---|---|---|
+| ambient level | 0.5 | fixed gain on the bed (`*~` right inlet, both channels) |
+| fade-in (ms) | 4000 | idle-mode envelope ramp up |
+| fade-out (ms) | 400 | idle-mode envelope ramp down on activity |
+| idle timeout (ms) | 60000 | no-activity time before idle mode starts |
+
+`; pd dsp 1` is sent from `loadbang` on open, same as the other patches.
 
 ## Sample loading & arrays
 
