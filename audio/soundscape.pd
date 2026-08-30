@@ -23,8 +23,8 @@
 #X msg 210 500 open soundscapes/bog_idle_mode.wav;
 #X msg 490 500 1;
 #X msg 530 500 0;
-#X obj 30 620 *~ 0;
-#X obj 130 620 *~ 0;
+#X obj 30 620 *~;
+#X obj 130 620 *~;
 #X obj 30 560 line~;
 #X obj 30 690 dac~ 1 2;
 #X text 620 190 fade-in (ms);
