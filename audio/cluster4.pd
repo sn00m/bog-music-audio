@@ -64,7 +64,7 @@
 #X obj 900 790 route fb1;
 #X obj 900 820 unpack f f;
 #X obj 900 850 + 59;
-#X text 1050 700 TD activity ping -- edit IP below and click the message to (re)connect;
+#X text 1050 700 activity ping -- edit IP below to the Mac mini running soundscape.pd / click the message to (re)connect;
 #X msg 1050 730 connect 192.168.1.100 9000;
 #X obj 1050 760 netsend -u -b;
 #X obj 1050 900 loadbang;

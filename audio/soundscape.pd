@@ -1,5 +1,5 @@
 #N canvas 30 40 1320 900 10;
-#X text 30 20 Bog Music -- ambient bed + idle-mode soundscape layer (ported from the TouchDesigner project).;
+#X text 30 20 Bog Music -- ambient bed + idle-mode soundscape layer.;
 #X text 30 40 Standalone patch for its own device. Receives /activity OSC from the 6 cluster patches on UDP 9000.;
 #X text 30 62 Ambient bed loops forever at a fixed level. Idle mode fades in when no /activity arrives for the timeout / fades out fast when it resumes / and layers on top of the bed.;
 #X obj 30 110 loadbang;

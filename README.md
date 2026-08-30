@@ -41,8 +41,7 @@ parameterized by which 3 samples/notes it owns, and which OSC port it
 listens on.
 
 Separate from the sampler patches, `soundscape.pd` runs the ambient bed and
-idle-mode soundscape on its own device — the Pure Data port of the old
-TouchDesigner project. See "Soundscape layer" below.
+idle-mode soundscape on its own device. See "Soundscape layer" below.
 
 ## Signal flow (main patch)
 
@@ -195,16 +194,13 @@ Chain: `netreceive -u -b <port>` → `oscparse` → `list trim` → `route fb1` 
   range — the converted note number just won't match that voice's `select`
   list.
 
-## TD activity ping (outgoing OSC)
+## Activity ping (outgoing OSC)
 
-These patches run alongside a TouchDesigner project with two relevant
-sub-patches: an ambient background patch, and an idle-mode patch that should
-start playing automatically whenever nothing has been triggered on any of
-the Pd patches for 1 minute, and reset that 1-minute timer on any new
-trigger. **Idle-mode's actual timer and trigger logic lives entirely on the
-TD side** — Pd's only job is to notify TD that a trigger happened. Each of
-the 6 patches sends its own ping independently; TD is responsible for
-treating a ping from *any* of them as "not idle."
+Every `clusterN.pd` (and `sampler.pd`) sends an `/activity` OSC message on
+each valid controller trigger. This is the only thing that drives the idle
+timer in `soundscape.pd` (see "Soundscape layer" below): a ping means
+"something is playing, don't go idle." Each of the 6 patches pings
+independently; `soundscape.pd` treats a ping from *any* of them as activity.
 
 Chain (added once per patch, right off `route fb1` — so it fires on every
 valid controller message, independent of whether the choke gate goes on to
@@ -212,34 +208,19 @@ accept or drop it): `route fb1` → `t b` → **[`1` → `oscformat /activity`] 
 [`del 50` → `0` → the same `oscformat /activity`]** → `netsend -u -b`.
 
 - **Destination**: each patch has a message box near the OSC-input objects
-  reading `connect 192.168.1.100 9000` — **this is a placeholder IP**, since
-  TD's machine address wasn't known yet when this was built. Edit it (Pd
+  reading `connect 192.168.1.100 9000` — **a placeholder IP**. Edit it (Pd
   edit mode, double-click the message box, retype the IP) in **all 6
-  patches** once you know TD's real address, then click the message box
-  once (in run mode) to reconnect — it also fires automatically via
-  `loadbang` on patch open, so after editing it correctly once and
-  resaving, no manual click is needed on future opens. Port **9000** is
-  fixed (doesn't collide with the 8000–8005 incoming-trigger ports).
-- **Message sent**: OSC address `/activity`, sent **twice per trigger**:
-  once with argument `1`, then again 50ms later with argument `0`. The
-  value itself is a dummy — only its arrival matters — but the *pair* is
-  required. On the TD side this is built to feed a Trigger CHOP that was
-  originally designed around MIDI, where a note naturally returns to 0
-  between hits; an OSC In CHOP just holds whatever value it last received
-  indefinitely rather than decaying back down. Sending only `1` made the
-  channel sit permanently "on" after the very first ping, so a
-  rising-edge/threshold-based Trigger CHOP downstream never saw a second
-  edge to fire on for any later ping. Sending `1` then `0` recreates a real
-  on/off pulse, matching what a MIDI note-on/note-off pair would look like
-  — confirmed working against a live TD Trigger CHOP + Speed CHOP idle
-  timer built this way.
-- **What the TD side needs to implement**: listen for OSC on UDP port 9000
-  (all patches send there); on receiving `/activity` from *any* patch,
-  (re)start a 60-second countdown; if it ever elapses without being reset,
-  start idle-mode playback. TD will also need its own logic for what
-  happens to idle-mode once activity resumes (e.g. stopping it again) —
-  that's not something Pd signals for; only the "went idle" edge is
-  Pd's concern here.
+  patches** to the **Mac mini's address** (the machine running
+  `soundscape.pd`), then click the message box once in run mode to
+  reconnect — it also fires via `loadbang` on patch open, so once edited and
+  resaved no manual click is needed on future opens. Port **9000** is fixed
+  (doesn't collide with the 8000–8005 incoming-trigger ports).
+- **Message sent**: OSC address `/activity`, sent twice per trigger — once
+  with argument `1`, then `0` about 50 ms later. The value is a dummy; only
+  the arrival matters. `soundscape.pd` reduces both messages to bangs and
+  treats either as activity, so the pair is just harmless redundancy (a
+  holdover from an earlier receiver that needed an on/off edge). A single
+  message would work as well.
 - `netsend`/`netreceive` (not `udpsend`/`udpreceive`) are the correct
   vanilla Pd object names for this — and both need the `-b` (binary) flag
   to carry real OSC bytes; without it, Pd's own FUDI text encoding gets
@@ -247,9 +228,7 @@ accept or drop it): `route fb1` → `t b` → **[`1` → `oscformat /activity`] 
 
 ## Soundscape layer (`audio/soundscape.pd`)
 
-`soundscape.pd` is a straight port of the two TouchDesigner sub-patches
-described above into vanilla Pd, so the install no longer needs TD running
-at all. It plays two things:
+`soundscape.pd` is a standalone vanilla-Pd patch that plays two things:
 
 - **Ambient bed** — `soundscapes/bog_ambient_base.wav` (stereo, 48 kHz,
   24-bit, ~30 min), looping forever at a fixed level from patch open.
@@ -272,20 +251,19 @@ pointed at a **BlackHole virtual device**, which `sox` captures into
 `snapserver`'s pipe, not at physical speakers. Full Mac-side setup is in
 [`snapserver-setup.md`](snapserver-setup.md).
 
-### Where it takes over from TD
+### Receiving the activity pings
 
-The "What the TD side needs to implement" list above is now implemented in
-this patch:
-
-- `netreceive -u -b 9000` → `oscparse` → `list trim` → `route activity`
-  is the same OSC-in chain the cluster patches use, listening on the same
-  UDP port 9000 the cluster patches already send `/activity` to. Both the
-  `1` and the `0` of each ping pair count as activity (they're reduced to
-  bangs), so the existing dummy on/off pulse needs no change.
+- `netreceive -u -b 9000` → `oscparse` → `list trim` → `route activity` is
+  the same OSC-in chain the cluster patches use, listening on the same UDP
+  port 9000 the cluster patches send `/activity` to. Both the `1` and the
+  `0` of each ping pair count as activity (they're reduced to bangs).
 - **You must edit the `connect 192.168.1.100 9000` message box in all 6
-  cluster patches** to the Mac mini's IP (it was a placeholder for TD's
-  address). Same edit that section already describes — the destination is
-  now the Mac mini instead of the TD machine.
+  cluster patches** to the Mac mini's IP (it ships as a placeholder). See
+  "Activity ping" above.
+- On receiving `/activity`, `soundscape.pd` (re)starts a 60-second
+  countdown; if it elapses without being reset, idle mode fades in. The
+  next `/activity` fades idle back out and restarts the countdown. All of
+  that logic lives in this patch — see "Idle state machine" below.
 
 ### Idle state machine
 
