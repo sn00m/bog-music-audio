@@ -41,7 +41,7 @@
 #X obj 110 260 cluster-voice4;
 #X obj 200 260 cluster-voice4;
 #X obj 290 260 cluster-voice4;
-#X obj 20 320 *~ 0.2;
+#X obj 20 320 *~ 0.8;
 #X obj 20 360 dac~ 1 2;
 #X text 600 20 Choke (ms) -- min gap between accepted note-on triggers;
 #X floatatom 600 50 5 0 0 0 - - - 0;
@@ -65,7 +65,7 @@
 #X obj 900 820 unpack f f;
 #X obj 900 850 + 59;
 #X text 1050 700 activity ping -- edit IP below to the Mac mini running soundscape.pd / click the message to (re)connect;
-#X msg 1050 730 connect 192.168.1.100 9000;
+#X msg 1050 730 connect 10.42.2.10 9000;
 #X obj 1050 760 netsend -u -b;
 #X obj 1050 900 loadbang;
 #X obj 1050 940 t b;
@@ -73,6 +73,7 @@
 #X obj 1050 1000 oscformat /activity;
 #X obj 1150 940 del 50;
 #X msg 1150 970 0;
+#X obj 20 400 dac~ 3 4;
 #X connect 1 0 2 0;
 #X connect 39 0 3 0;
 #X connect 40 0 41 0;
@@ -142,3 +143,5 @@
 #X connect 60 0 63 0;
 #X connect 63 0 64 0;
 #X connect 64 0 62 0;
+#X connect 33 0 65 0;
+#X connect 33 0 65 1;

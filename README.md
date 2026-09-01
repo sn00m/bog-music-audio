@@ -49,7 +49,7 @@ idle-mode soundscape on its own device. See "Soundscape layer" below.
 OSC in ──► [OSC-to-note conversion] ──► [choke gate] ──► poly N 1 ──► pack f f f ──► route 1..N ──► per-voice sample player (×N)
                                                                                                             │
                                                                                                             ▼
-                                                                                               *~ 0.2 ──► dac~ (stereo)
+                                                                                               *~ 0.8 ──► dac~ 1 2 + dac~ 3 4
 ```
 
 1. **Input.** An OSC message arrives over the network and is converted into
@@ -68,8 +68,10 @@ OSC in ──► [OSC-to-note conversion] ──► [choke gate] ──► poly 
    `sampler-voice` / `cluster-voiceN` instance.
 6. Each voice independently decides which sample to play and runs its own
    ADSR envelope (see "Per-voice architecture" below).
-7. All voices sum into `*~ 0.2` (fixed output trim) and out to `dac~ 1 2`
-   (both stereo channels carry the same mono-summed signal).
+7. All voices sum into `*~ 0.8` (fixed output trim), which fans out to both
+   `dac~ 1 2` **and** `dac~ 3 4` — every one of those four output channels
+   carries the same mono-summed signal. (`dac~ 3 4` needs an interface with
+   at least 4 output channels; on a 2-out device it's simply silent.)
 
 ### Why `poly`'s outlet order matters
 
@@ -208,13 +210,13 @@ accept or drop it): `route fb1` → `t b` → **[`1` → `oscformat /activity`] 
 [`del 50` → `0` → the same `oscformat /activity`]** → `netsend -u -b`.
 
 - **Destination**: each patch has a message box near the OSC-input objects
-  reading `connect 192.168.1.100 9000` — **a placeholder IP**. Edit it (Pd
-  edit mode, double-click the message box, retype the IP) in **all 6
-  patches** to the **Mac mini's address** (the machine running
-  `soundscape.pd`), then click the message box once in run mode to
-  reconnect — it also fires via `loadbang` on patch open, so once edited and
-  resaved no manual click is needed on future opens. Port **9000** is fixed
-  (doesn't collide with the 8000–8005 incoming-trigger ports).
+  reading `connect 10.42.2.10 9000` — the **Mac mini's address** (the
+  machine running `soundscape.pd`). If that machine's IP changes, edit the
+  box (Pd edit mode, double-click, retype) in **all 6 patches**, then click
+  it once in run mode to reconnect — it also fires via `loadbang` on patch
+  open, so once edited and resaved no manual click is needed on future
+  opens. Port **9000** is fixed (doesn't collide with the 8000–8005
+  incoming-trigger ports).
 - **Message sent**: OSC address `/activity`, sent twice per trigger — once
   with argument `1`, then `0` about 50 ms later. The value is a dummy; only
   the arrival matters. `soundscape.pd` reduces both messages to bangs and
@@ -257,9 +259,9 @@ pointed at a **BlackHole virtual device**, which `sox` captures into
   the same OSC-in chain the cluster patches use, listening on the same UDP
   port 9000 the cluster patches send `/activity` to. Both the `1` and the
   `0` of each ping pair count as activity (they're reduced to bangs).
-- **You must edit the `connect 192.168.1.100 9000` message box in all 6
-  cluster patches** to the Mac mini's IP (it ships as a placeholder). See
-  "Activity ping" above.
+- All 6 patches point their `connect … 9000` box at the Mac mini
+  (`10.42.2.10`); update it there if that address changes. See "Activity
+  ping" above.
 - On receiving `/activity`, `soundscape.pd` (re)starts a 60-second
   countdown; if it elapses without being reset, idle mode fades in. The
   next `/activity` fades idle back out and restarts the countdown. All of

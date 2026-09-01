@@ -135,7 +135,7 @@
 #X obj 470 260 sampler-voice;
 #X obj 560 260 sampler-voice;
 #X obj 650 260 sampler-voice;
-#X obj 20 320 *~ 0.2;
+#X obj 20 320 *~ 0.8;
 #X obj 20 360 dac~ 1 2;
 #X text 20 430 Computer keyboard test triggers (Q W E R T Y U I O P / A S D F G = low -> high pitch) -- velocity fixed at 100;
 #X obj 20 460 key;
@@ -179,7 +179,7 @@
 #X obj 900 820 unpack f f;
 #X obj 900 850 + 59;
 #X text 1050 700 activity ping -- edit IP below to the Mac mini running soundscape.pd / click the message to (re)connect;
-#X msg 1050 730 connect 192.168.1.100 9000;
+#X msg 1050 730 connect 10.42.2.10 9000;
 #X obj 1050 760 netsend -u -b;
 #X obj 1050 900 loadbang;
 #X obj 1050 940 t b;
@@ -187,6 +187,7 @@
 #X obj 1050 1000 oscformat /activity;
 #X obj 1150 940 del 50;
 #X msg 1150 970 0;
+#X obj 20 400 dac~ 3 4;
 #X connect 1 0 2 0;
 #X connect 87 0 3 0;
 #X connect 88 0 89 0;
@@ -321,3 +322,5 @@
 #X connect 108 0 111 0;
 #X connect 111 0 112 0;
 #X connect 112 0 110 0;
+#X connect 61 0 113 0;
+#X connect 61 0 113 1;
