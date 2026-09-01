@@ -17,7 +17,7 @@
 #X floatatom 340 372 7 0 0 0 - - - 0;
 #X obj 340 342 loadbang;
 #X msg 340 402 0.5;
-#X text 410 374 ambient level (fixed);
+#X text 410 374 ambient level;
 #X text 30 460 IDLE MODE LAYER -- envelope-gated / relooped while idle;
 #X obj 30 500 readsf~ 2;
 #X msg 210 500 open soundscapes/bog_idle_mode.wav;
@@ -67,6 +67,12 @@
 #X obj 210 830 t b b;
 #X text 30 770 Idle EOF reloop -- keeps the idle layer going while still idle;
 #X obj 380 800 r idle-active;
+#X obj 620 525 hsl 128 15 0 1 0 1 empty empty empty -2 -8 0 10 #fcfcfc #000000 #000000 6350 1;
+#X obj 30 655 *~;
+#X obj 130 655 *~;
+#X obj 620 585 hsl 128 15 0 1 0 1 empty empty empty -2 -8 0 10 #fcfcfc #000000 #000000 6350 1;
+#X text 620 505 ambient volume;
+#X text 620 565 idle volume;
 #X connect 3 0 4 0;
 #X connect 3 0 52 0;
 #X connect 6 0 7 0;
@@ -90,8 +96,8 @@
 #X connect 20 2 64 0;
 #X connect 26 0 24 1;
 #X connect 26 0 25 1;
-#X connect 24 0 27 0;
-#X connect 25 0 27 1;
+#X connect 24 0 69 0;
+#X connect 25 0 70 0;
 #X connect 21 0 20 0;
 #X connect 22 0 20 0;
 #X connect 23 0 20 0;
@@ -135,3 +141,8 @@
 #X connect 58 0 45 0;
 #X connect 61 0 62 0;
 #X connect 62 0 63 0;
+#X connect 68 0 15 0;
+#X connect 69 0 27 0;
+#X connect 70 0 27 1;
+#X connect 71 0 69 1;
+#X connect 71 0 70 1;

@@ -304,15 +304,20 @@ with crossfaded ends, or run two `readsf~` ping-ponging with a short
 
 ### Controls
 
-Three floatatoms at the top, same floatatom + `loadbang` + default-message
+The timing floatatoms use the same floatatom + `loadbang` + default-message
 pattern as the sampler patches:
 
 | Control | Default | Meaning |
 |---|---|---|
-| ambient level | 0.5 | fixed gain on the bed (`*~` right inlet, both channels) |
+| ambient volume | ~0.5 | `hsl` fader on the bed; feeds the `ambient level` number box, which drives both ambient `*~` right inlets |
+| idle volume | ~0.5 | `hsl` fader on idle mode; a `*~` gain stage **after** the fade envelope, so it scales idle without touching the fade in/out shape |
 | fade-in (ms) | 4000 | idle-mode envelope ramp up |
 | fade-out (ms) | 400 | idle-mode envelope ramp down on activity |
 | idle timeout (ms) | 60000 | no-activity time before idle mode starts |
+
+The two `hsl` faders have `init` set, so they send their default on patch
+open. The idle path is `readsf~ → *~ (fade envelope) → *~ (idle volume) →
+dac~`; the ambient path is `readsf~ → *~ (ambient volume) → dac~`.
 
 `; pd dsp 1` is sent from `loadbang` on open, same as the other patches.
 
